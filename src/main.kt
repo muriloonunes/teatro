@@ -12,106 +12,99 @@ val listaIngressos = mutableListOf<Ingresso>()
 fun main() {
     val scanner = Scanner(System.`in`)
     var opcao: Int
+
     do {
-        println("Bem-vindo ao Teatro ABC")
+        println("\n=== Bem vindo ao Teatro ABC ===")
         println("1. Comprar Ingresso")
         println("2. Estatísticas")
         println("3. Imprimir Ingresso por CPF")
         println("0. Sair")
-        print("Escolha uma opção: ")
-        opcao = scanner.nextInt()
+        opcao = lerInteiroEmIntervalo(scanner, "Escolha uma opção: ", 0, 3)
 
         when (opcao) {
-            1 -> {
-                comprarIngresso(scanner)
-            }
-
-            2 -> {
-                estatisticas()
-            }
-
-            3 -> {
-                imprimirIngresso(scanner)
-            }
-
+            1 -> comprarIngresso(scanner)
+            2 -> estatisticas()
+            3 -> imprimirIngresso(scanner)
             0 -> println("Encerrando o sistema")
-            else -> println("Opção inválida!")
         }
     } while (opcao != 0)
 }
 
 fun comprarIngresso(scanner: Scanner) {
-    println("Para qual peça deseja comprar o ingresso?")
-    println("1. Wicked\n2. Rei Leão\n3. O Auto da Compadecida\n0. Voltar")
-    val pecaEscolhida: Int = scanner.nextInt()
+    println("\nPara qual peça deseja comprar o ingresso?")
+    for (i in NOMES_PECAS.indices) {
+        println("${i + 1}. ${NOMES_PECAS[i]}")
+    }
+    println("0. Voltar")
+    val pecaEscolhida = lerInteiroEmIntervalo(scanner, "Escolha: ", 0, NUM_PECAS)
     if (pecaEscolhida == 0) return
-    if (pecaEscolhida !in 1..NUM_PECAS) {
-        println("Peça inválida!")
-        return
+
+    println("\nPara qual horário deseja comprar o ingresso?")
+    for (i in NOMES_SESSOES.indices) {
+        println("${i + 1}. ${NOMES_SESSOES[i]}")
     }
-    println("Para qual horário deseja comprar o ingresso?")
-    println("1. Manhã\n2. Tarde\n3. Noite\n0. Escolher outra peça")
-    print("Escolha: ")
-    val sessaoEscolhida = scanner.nextInt()
+    println("0. Escolher outra peça")
+    val sessaoEscolhida = lerInteiroEmIntervalo(scanner, "Escolha: ", 0, NUM_SESSOES)
     if (sessaoEscolhida == 0) return
-    if (sessaoEscolhida !in 1..NUM_SESSOES) {
-        println("Sessão inválida!")
-        return
-    }
 
     val pecaIndex = pecaEscolhida - 1
-    val secaoIndex = sessaoEscolhida - 1
+    val sessaoIndex = sessaoEscolhida - 1
 
-    menuAreas(scanner, pecaIndex, secaoIndex)
+    menuAreas(scanner, pecaIndex, sessaoIndex)
 }
 
-fun menuAreas(scanner: Scanner, pecaIndex: Int, secaoIndex: Int) {
-    println("\n--- SELEÇÃO DE AREA DO TEATRO (${NOMES_PECAS[pecaIndex]} - ${NOMES_SESSOES[secaoIndex]}) ---")
+fun menuAreas(scanner: Scanner, pecaIndex: Int, sessaoIndex: Int) {
+    println("\n--- SELEÇÃO DE ÁREA DO TEATRO (${NOMES_PECAS[pecaIndex]} - ${NOMES_SESSOES[sessaoIndex]}) ---")
     val areas = Area.entries.toTypedArray()
 
     for (i in areas.indices) {
-        val s = areas[i]
-        println("${i + 1}. ${s.nomeExibicao} (R$ ${String.format("%.2f", s.precoBase)})")
+        val a = areas[i]
+        println("${i + 1}. ${a.nomeExibicao} (R$ ${"%.2f".format(a.precoBase)})")
     }
     println("0. Cancelar")
-    print("Escolha o setor: ")
-    val setorEscolhido = scanner.nextInt()
-    if (setorEscolhido !in 1..areas.size) {
-        println("Opção inválida!")
-        return
-    }
+    val setorEscolhido = lerInteiroEmIntervalo(scanner, "Escolha o setor: ", 0, areas.size)
+    if (setorEscolhido == 0) return
+
     val area = areas[setorEscolhido - 1]
 
     val mapa = when (area) {
-        Area.PLATEIA_A -> mapaPlateiaA[pecaIndex][secaoIndex]
-        Area.PLATEIA_B -> mapaPlateiaB[pecaIndex][secaoIndex]
-        Area.FRISA -> mapaFrisas[pecaIndex][secaoIndex]
-        Area.CAMAROTE -> mapaCamarotes[pecaIndex][secaoIndex]
-        Area.BALCAO_NOBRE -> mapaBalcao[pecaIndex][secaoIndex]
+        Area.PLATEIA_A -> mapaPlateiaA[pecaIndex][sessaoIndex]
+        Area.PLATEIA_B -> mapaPlateiaB[pecaIndex][sessaoIndex]
+        Area.FRISA -> mapaFrisas[pecaIndex][sessaoIndex]
+        Area.CAMAROTE -> mapaCamarotes[pecaIndex][sessaoIndex]
+        Area.BALCAO_NOBRE -> mapaBalcao[pecaIndex][sessaoIndex]
     }
 
-    selecionarAssento(scanner, pecaIndex, secaoIndex, area, mapa)
+    selecionarAssento(scanner, pecaIndex, sessaoIndex, area, mapa)
 }
 
 fun selecionarAssento(scanner: Scanner, pecaIndex: Int, sessaoIndex: Int, area: Area, mapa: BooleanArray) {
-    println("\nMapa de Assentos - ${area.nomeExibicao} ([ ]Livre, [ X ]Ocupado):")
+    println("\nMapa de Assentos - ${area.nomeExibicao} ([ ]Livre, [X]Ocupado):")
     for (i in mapa.indices) {
-        val status = if (mapa[i]) " X " else " "
+        val status = if (mapa[i]) "X" else " "
         print(String.format("%s%02d:[%s]  ", area.prefixo, i + 1, status))
         if ((i + 1) % 10 == 0) println()
     }
     println()
-    print("Digite o número do assento desejado (1 a ${area.capacidade}): ")
-    val numero = scanner.nextInt()
-    val assentoIdx = numero - 1
 
-    if (assentoIdx !in mapa.indices) {
-        println("Assento inválido.")
+    if (mapa.all { it }) {
+        println("Todos os assentos desta área estão ocupados para esta sessão.")
         return
     }
 
+    val numero = lerInteiroEmIntervalo(
+        scanner,
+        "Digite o número do assento desejado (1 a ${area.capacidade}, 0 para cancelar): ",
+        0,
+        area.capacidade
+    )
+    if (numero == 0) return
+
+    val assentoIdx = numero - 1
+
     if (mapa[assentoIdx]) {
-        println("Assento já ocupado!")
+        println("Assento já ocupado! Escolha outro.")
+        selecionarAssento(scanner, pecaIndex, sessaoIndex, area, mapa)
         return
     }
 
@@ -127,13 +120,9 @@ fun finalizarCheckout(
     mapa: BooleanArray,
     assentoIdx: Int
 ) {
-    scanner.nextLine()
     println("\n--- FINALIZAR COMPRA ---")
-    print("Digite o CPF do titular: ")
-    val cpf = scanner.nextLine().trim()
-
-    if (!validarCPF(cpf.toLong())) {
-        println("CPF inválido!")
+    val cpf = lerCPF(scanner) ?: run {
+        println("Compra cancelada.")
         return
     }
 
@@ -141,36 +130,29 @@ fun finalizarCheckout(
 
     if (clienteExistente == null) {
         println("Cadastro não encontrado para este CPF.")
-        print("Deseja realizar o cadastro completo? (1. Sim / 2. Não): ")
-        val opcFidelidade = scanner.nextInt()
-        scanner.nextLine()
+        val opcFidelidade = lerInteiroEmIntervalo(scanner, "Deseja realizar o cadastro completo? (1. Sim / 2. Não): ", 1, 2)
 
         val novoCliente = Cliente(cpf = cpf)
         if (opcFidelidade == 1) {
             novoCliente.fidelidade = true
-            print("Nome completo: ")
-            novoCliente.nome = scanner.nextLine()
-            print("Telefone: ")
-            novoCliente.telefone = scanner.nextLine()
-            print("Data de Nascimento (dd/mm/aaaa): ")
-            novoCliente.dataNascimento = scanner.nextLine()
-            print("Cidade: ")
-            novoCliente.cidade = scanner.nextLine()
-            print("Estado: ")
-            novoCliente.estado = scanner.nextLine()
+            novoCliente.nome = lerTextoNaoVazio(scanner, "Nome completo: ")
+            novoCliente.telefone = lerTextoNaoVazio(scanner, "Telefone: ")
+            novoCliente.dataNascimento = lerDataNascimento(scanner)
+            novoCliente.cidade = lerTexto(scanner, "Cidade: ")
+            novoCliente.estado = lerTexto(scanner, "Estado: ")
         }
         listaClientes.add(novoCliente)
         clienteExistente = novoCliente
     }
+
     println("\nForma de pagamento:")
     println("1. Cartão de Crédito\n2. Cartão de Débito\n3. Boleto\n4. PIX")
-    print("Escolha a opção: ")
-    val formaPagto = when (scanner.nextInt()) {
+    val opcaoPagamento = lerInteiroEmIntervalo(scanner, "Escolha a opção: ", 1, 4)
+    val formaPagto = when (opcaoPagamento) {
         1 -> "Crédito"
         2 -> "Débito"
         3 -> "Boleto"
-        4 -> "PIX"
-        else -> "Outro"
+        else -> "PIX"
     }
 
     mapa[assentoIdx] = true
@@ -260,13 +242,9 @@ fun indiceMenorValor(valores: DoubleArray): Int {
     return menor
 }
 fun imprimirIngresso(scanner: Scanner) {
-    scanner.nextLine()
     println("\n--- IMPRIMIR INGRESSO ---")
-    print("Digite o CPF do titular: ")
-    val cpf = scanner.nextLine().trim()
-
-    if (cpf.isEmpty()) {
-        println("CPF inválido.")
+    val cpf = lerCPF(scanner) ?: run {
+        println("Operação cancelada.")
         return
     }
 

@@ -35,6 +35,9 @@ fun validarCPF(cpf: Long): Boolean {
     // verifica se as variaveis primeiroDigito e segundoDigito sao iguais aos digitos verificadores do CPF, que estao na posicao 9 e 10 do array
 }
 
+
+
+
 //claudinho sugeriu
 
 /**
