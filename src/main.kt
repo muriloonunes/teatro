@@ -27,11 +27,11 @@ fun main() {
             }
 
             2 -> {
-
+                estatisticas()
             }
 
             3 -> {
-                imprimirIngresso()
+                imprimirIngresso(scanner)
             }
 
             0 -> println("Encerrando o sistema")
@@ -189,6 +189,105 @@ fun finalizarCheckout(
     println("\nCompra realizada com sucesso. Assento: $codigoAssento (${area.nomeExibicao})!")
 }
 
-fun imprimirIngresso() {
+fun estatisticas() {
+    if (listaIngressos.isEmpty()) {
+        println("\nNenhuma venda registrada ainda.")
+        return
+    }
 
+    val vendasPorPeca = IntArray(NUM_PECAS)
+    val lucroPorPeca = DoubleArray(NUM_PECAS)
+    val vendasPorSessao = IntArray(NUM_SESSOES)
+    val lucroPorPecaSessao = Array(NUM_PECAS) { DoubleArray(NUM_SESSOES) }
+    val vendasPorArea = mutableMapOf<Area, Int>()
+
+    for (ingresso in listaIngressos) {
+        vendasPorPeca[ingresso.pecaIndex]++
+        lucroPorPeca[ingresso.pecaIndex] += ingresso.preco
+        vendasPorSessao[ingresso.sessaoIndex]++
+        lucroPorPecaSessao[ingresso.pecaIndex][ingresso.sessaoIndex] += ingresso.preco
+        vendasPorArea[ingresso.area] = (vendasPorArea[ingresso.area] ?: 0) + 1
+    }
+
+    val pecaMaisVendida = indiceMaiorValor(vendasPorPeca)
+    val pecaMenosVendida = indiceMenorValor(vendasPorPeca)
+    val sessaoMaisOcupada = indiceMaiorValor(vendasPorSessao)
+    val sessaoMenosOcupada = indiceMenorValor(vendasPorSessao)
+
+    println("\n--- ESTATÍSTICAS DE VENDAS ---")
+    println("Total de ingressos vendidos: ${listaIngressos.size}")
+    println("Peça mais vendida: ${NOMES_PECAS[pecaMaisVendida]} (${vendasPorPeca[pecaMaisVendida]} ingressos)")
+    println("Peça menos vendida: ${NOMES_PECAS[pecaMenosVendida]} (${vendasPorPeca[pecaMenosVendida]} ingressos)")
+    println("Sessão mais ocupada: ${NOMES_SESSOES[sessaoMaisOcupada]}")
+    println("Sessão menos ocupada: ${NOMES_SESSOES[sessaoMenosOcupada]}")
+
+    println("\nDetalhamento por peça:")
+    for (i in 0 until NUM_PECAS) {
+        val lucroMedio = if (vendasPorPeca[i] != 0) lucroPorPeca[i] / vendasPorPeca[i] else 0.0
+        val sessaoMaisLucrativa = indiceMaiorValor(lucroPorPecaSessao[i])
+        val sessaoMenosLucrativa = indiceMenorValor(lucroPorPecaSessao[i])
+        println("- ${NOMES_PECAS[i]}: ${vendasPorPeca[i]} vendidos, faturamento R$ ${"%.2f".format(lucroPorPeca[i])}, ticket médio R$ ${"%.2f".format(lucroMedio)}")
+        println("  Sessão mais lucrativa: ${NOMES_SESSOES[sessaoMaisLucrativa]} | menos lucrativa: ${NOMES_SESSOES[sessaoMenosLucrativa]}")
+    }
+
+    println("\nVendas por área:")
+    for (area in Area.entries) {
+        println("- ${area.nomeExibicao}: ${vendasPorArea[area] ?: 0} ingressos")
+    }
+}
+
+fun indiceMaiorValor(valores: IntArray): Int {
+    var maior = 0
+    for (i in 1 until valores.size) if (valores[i] > valores[maior]) maior = i
+    return maior
+}
+
+fun indiceMenorValor(valores: IntArray): Int {
+    var menor = 0
+    for (i in 1 until valores.size) if (valores[i] < valores[menor]) menor = i
+    return menor
+}
+
+fun indiceMaiorValor(valores: DoubleArray): Int {
+    var maior = 0
+    for (i in 1 until valores.size) if (valores[i] > valores[maior]) maior = i
+    return maior
+}
+
+fun indiceMenorValor(valores: DoubleArray): Int {
+    var menor = 0
+    for (i in 1 until valores.size) if (valores[i] < valores[menor]) menor = i
+    return menor
+}
+fun imprimirIngresso(scanner: Scanner) {
+    scanner.nextLine()
+    println("\n--- IMPRIMIR INGRESSO ---")
+    print("Digite o CPF do titular: ")
+    val cpf = scanner.nextLine().trim()
+
+    if (cpf.isEmpty()) {
+        println("CPF inválido.")
+        return
+    }
+
+    val ingressosDoCliente = listaIngressos.filter { it.cpfCliente == cpf }
+    if (ingressosDoCliente.isEmpty()) {
+        println("Nenhum ingresso encontrado para o CPF informado.")
+        return
+    }
+
+    val cliente = listaClientes.find { it.cpf == cpf }
+    val nomeCliente = cliente?.nome?.takeIf { it.isNotBlank() }
+
+    println(if (nomeCliente != null) "\nIngressos de $nomeCliente:" else "\nIngressos encontrados:")
+    for (ingresso in ingressosDoCliente) {
+        println("----------------------------------")
+        println("Peça: ${NOMES_PECAS[ingresso.pecaIndex]}")
+        println("Sessão: ${NOMES_SESSOES[ingresso.sessaoIndex]}")
+        println("Área: ${ingresso.area.nomeExibicao}")
+        println("Assento: ${ingresso.codigoAssento}")
+        println("Preço: R$ ${"%.2f".format(ingresso.preco)}")
+        println("Forma de pagamento: ${ingresso.formaPagamento}")
+    }
+    println("----------------------------------")
 }
