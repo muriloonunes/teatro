@@ -144,7 +144,8 @@ fun selecionarAssento(scanner: Scanner, pecaIndex: Int, sessaoIndex: Int, areaIn
         return
     }
 
-    finalizarCheckout(scanner, pecaIndex, sessaoIndex, areaIndex, "$prefixoArea$numero", mapa, assentoIdx)
+    val codigoAssento = String.format("%s%02d", prefixoArea, numero)
+    finalizarCheckout(scanner, pecaIndex, sessaoIndex, areaIndex, codigoAssento, mapa, assentoIdx)
 }
 
 fun finalizarCheckout(
@@ -180,7 +181,7 @@ fun finalizarCheckout(
             fidelidade = true
             nome = lerTextoNaoVazio(scanner, "Nome completo: ")
             telefone = lerTextoNaoVazio(scanner, "Telefone: ")
-            dataNascimento = lerTextoNaoVazio(scanner, "Data de Nascimento (dd/mm/aaaa): ")
+            dataNascimento = lerDataNascimento(scanner)
             cidade = lerTexto(scanner, "Cidade: ")
             estado = lerTexto(scanner, "Estado: ")
         }
@@ -297,12 +298,14 @@ fun imprimirIngresso(scanner: Scanner) {
 
     val clienteIndex = clientesCpf.indexOf(cpf)
     val nomeCliente = if (clienteIndex != -1) clientesNome[clienteIndex].takeIf { it.isNotBlank() } else null
+    val ehFidelidade = clienteIndex != -1 && clientesFidelidade[clienteIndex]
 
     println(if (nomeCliente != null) "\nIngressos de $nomeCliente:" else "\nIngressos encontrados:")
     for (i in indicesEncontrados) {
         val pecaIdx = ingressosPecaIndex[i]
         val sessaoIdx = ingressosSessaoIndex[i]
         val areaIdx = ingressosAreaIndex[i]
+        if (ehFidelidade) println("Cliente do programa de fidelidade")
 
         println("----------------------------------")
         println("Peça: ${NOMES_PECAS[pecaIdx]}")
